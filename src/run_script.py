@@ -1,3 +1,7 @@
+"""
+Скрипт загружает данные  c адресами сайта из файла *.xlsx, затем опрашивает их.
+Данные ответа на запрос сохраняет в базу данных
+"""
 import argparse
 import os
 import requests
@@ -11,9 +15,6 @@ from logging_error import LoggingError
 from settings import Settings
 
 settings = Settings()
-logging.basicConfig(filename=os.path.join(settings.path_log,'log'),level=logging.INFO)
-
-logging.info(f"Starts with settings: {settings.get_settings_dict()}")
 
 def correct_path(file: str):
     """
@@ -27,6 +28,38 @@ def correct_path(file: str):
         raise argparse.ArgumentTypeError(
             f"file {file} does not exist")
 
+def set_logger_settings(args):
+    settings.print_table=args.output_table
+    if args.log_in_file:
+        logging.basicConfig(filename=os.path.join(settings.path_log, 'log'), level=logging.INFO)
+    else:
+        logging.basicConfig(level=logging.INFO)
+    logging.info(f"Starts with settings: {settings.get_settings_dict()}")
+
+
+def init_parser():
+    parser = argparse.ArgumentParser(
+        description='Script load data with url and poll their. Responses are saved in database')
+
+    parser.add_argument(
+        'file',
+        type=str,
+        metavar="FILE",
+        help="data file in xlsx format (consist of url,label and fetch)",
+    )
+    parser.add_argument(
+        '-l',
+        '--log_in_file',
+        help='logs out in file (default: logs output in stdout )',
+        action='store_true')
+
+    parser.add_argument(
+        '-o',
+        '--output_table',
+        help='turn on output resulting table monitoring (default: False)',
+        action='store_true')
+
+    return parser
 
 def get_response(url, label, timeout, start_time):
     """
@@ -45,19 +78,15 @@ def get_response(url, label, timeout, start_time):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Script ',
-        epilog='')
+    parser=init_parser()
 
-    parser.add_argument(
-        'file',
-        help='',
-        type=correct_path)
-
+    #получает аргументы
     args = parser.parse_args()
     file_xls = args.file
 
-    # скачиваем данные
+    set_logger_settings(args)
+
+    # скачивает данные
     data = pd.read_excel(file_xls)
     data = data[data.fetch == True]
     logging.info(f"Data loaded from {file_xls}")

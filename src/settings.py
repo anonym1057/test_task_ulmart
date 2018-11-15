@@ -28,6 +28,9 @@ class Settings():
         self.path_log = 'log'
         self.path_sqlite = 'instance'
         self.name_database = 'base'
+        #настройки при запуске
+        self.print_table=None
+
 
         config = configparser.ConfigParser()
         try:
@@ -58,3 +61,5 @@ class Settings():
                 "PATH_LOG": self.path_log,
                 "PATH_SQLITE": self.path_sqlite,
                 "NAME_DATABASE": self.name_database}
+
+

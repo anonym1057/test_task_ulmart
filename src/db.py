@@ -4,6 +4,7 @@
 import os
 import sqlite3
 import datetime
+import logging
 
 from settings import Settings
 
@@ -13,18 +14,18 @@ class DataBaseMonitoring():
     Осуществляет доступ к базе данных Мониторинг
     """
     def __init__(self):
-        settings=Settings()
-
+        self.settings=Settings()
+        path_base=os.path.join(self.settings.path_sqlite, f"{self.settings.name_database}.sqlite")
         #проверяем наличие существующей базы данных
-        if not os.path.isfile(os.path.join(settings.path_sqlite, f"{settings.name_database}.sqlite")):
-            self.db = self.get_db(os.path.join(settings.path_sqlite, settings.path_sqlite))
+        if not os.path.isfile(path_base):
+            self.db = self.get_db(path_base)
             #если нет, то создаем скриптом из файла
             with open(os.path.join(
                     os.path.dirname(__file__),'schema.sql')) as f:
                 self.db.executescript(f.read())
         else:
             # инициализация базы данных
-            self.db = self.get_db(os.path.join(settings.path_sqlite, settings.path_sqlite))
+            self.db = self.get_db(path_base)
 
     def get_db(self, path):
         """
@@ -66,7 +67,7 @@ class DataBaseMonitoring():
             )
             self.db.commit()
         except Exception as e:
-            print(str(e))
+            logging.error(str(e))
 
     def print_table(self, size: int):
         """
@@ -74,16 +75,17 @@ class DataBaseMonitoring():
         :param size: количество строк
         :return:
         """
-        lines = self.db.execute("select * from MONITORING").fetchmany(size)
-        print(f"Table monitoring first {size} lines")
-        if lines:
-            print(lines[0].keys())
-            for line in lines:
-                for k in line.keys():
-                    print(line[k], end='\t')
-                print('')
-        else:
-            print("Table in empty")
+        if self.settings.print_table:
+            lines = self.db.execute("select * from MONITORING").fetchmany(size)
+            print(f"Table monitoring first {size} lines")
+            if lines:
+                print(lines[0].keys())
+                for line in lines:
+                    for k in line.keys():
+                        print(line[k], end='\t')
+                    print('')
+            else:
+                print("Table in empty")
 
 
 if __name__ == '__main__':

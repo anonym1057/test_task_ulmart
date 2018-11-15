@@ -2,6 +2,7 @@
 import traceback
 import json
 import os
+import logging
 
 from settings import Settings
 
@@ -30,7 +31,7 @@ class LoggingError():
                     "exception_value": str(exc_val),
                     "stack_info": str(traceback.extract_tb(exc_tb))}
             }
-
+            logging.error(str(exc_type) + str(exc_val) + str(traceback.extract_tb(exc_tb)))
             with open(os.path.join(Settings().path_errors, f"log_error_{self.label}.json"), "w") as js:
                 json.dump(error, js, ensure_ascii=False)
         return True
